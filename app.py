@@ -32,7 +32,19 @@ st.set_page_config(
 # Initialize database
 @st.cache_resource
 def get_database():
-    return Database()
+    db = Database()
+    # Auto-load sample data if database is empty (for Streamlit Cloud deployment)
+    df = db.get_all_conversations()
+    if df.empty:
+        sample_path = "data/sample_conversations.csv"
+        if Path(sample_path).exists():
+            try:
+                result = process_import(sample_path, db)
+                if result['success']:
+                    print("✅ Auto-loaded sample data on first run")
+            except Exception as e:
+                print(f"⚠️ Could not auto-load sample data: {e}")
+    return db
 
 db = get_database()
 
